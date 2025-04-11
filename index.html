@@ -2,77 +2,80 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Iframe Popup Detector</title>
+  <title>Iframe Popup and Domain Blocker</title>
   <style>
-    body {
+    /* Ensure the html and body take full height */
+    html, body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      overflow: hidden; /* Prevent scrollbars */
     }
 
+    /* Ensure iframe takes the full height */
     iframe {
       width: 100%;
-      height: 90vh;
+      height: 100%; /* Full height of the body */
       border: none;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-    }
-
-    .modal-content {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      padding: 20px;
-      text-align: center;
-      border-radius: 8px;
-    }
-
-    .modal-content button {
-      margin-top: 10px;
+      display: block;
     }
   </style>
 </head>
 <body>
 
   <!-- Sandbox blocks popups by default -->
-  <iframe id="myIframe" src="https://345movie.net" sandbox="allow-same-origin allow-scripts"></iframe>
-
-  <div class="modal" id="alertModal">
-    <div class="modal-content">
-      <p>The iframe tried to open a new tab or window.</p>
-      <button onclick="closeModal()">Close</button>
-    </div>
-  </div>
+  <iframe id="myIframe" src="https://345movie.net" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
 
   <script>
-    // Track focus loss as an indicator
-    let lastFocused = document.hasFocus();
+    // Check for iframe content window and block requests from a specific domain
+    const iframe = document.getElementById("myIframe");
 
-    setInterval(() => {
-      // If focus was lost and iframe is visible, assume a popup tried to open
-      if (!document.hasFocus() && lastFocused) {
-        showModal();
+    // Monitor the iframe's content window for potential issues
+    iframe.onload = function () {
+      try {
+        const iframeWindow = iframe.contentWindow;
+
+        // Block specific domains inside the iframe
+        const originalOpen = iframeWindow.open;
+        iframeWindow.open = function(url) {
+          if (url.includes("tracking.eu.flamtyr.com")) {
+            console.log("Blocked attempt to load content from tracking.eu.flamtyr.com");
+            return null;  // Block the popup or navigation
+          }
+          return originalOpen.apply(this, arguments);
+        };
+
+        // Monitor fetch requests and block those from the specific domain
+        const originalFetch = iframeWindow.fetch;
+        iframeWindow.fetch = function(input, init) {
+          const url = typeof input === 'string' ? input : input.url;
+          if (url.includes("tracking.eu.flamtyr.com")) {
+            console.log("Blocked network request to: " + url);
+            return Promise.reject("Blocked request to restricted domain");
+          }
+          return originalFetch.apply(this, arguments);
+        };
+
+        // Monitor XMLHttpRequest requests and block those from the specific domain
+        const originalXHR = iframeWindow.XMLHttpRequest;
+        iframeWindow.XMLHttpRequest = function() {
+          const xhr = new originalXHR();
+          const originalOpen = xhr.open;
+          xhr.open = function(method, url) {
+            if (url.includes("tracking.eu.flamtyr.com")) {
+              console.log("Blocked XMLHttpRequest to: " + url);
+              return; // Block the request
+            }
+            return originalOpen.apply(this, arguments);
+          };
+          return xhr;
+        };
+
+      } catch (e) {
+        console.error("Could not access iframe content due to cross-origin restrictions", e);
       }
-      lastFocused = document.hasFocus();
-    }, 500);
-
-    function showModal() {
-      document.getElementById("alertModal").style.display = "block";
-    }
-
-    function closeModal() {
-      document.getElementById("alertModal").style.display = "none";
-    }
+    };
   </script>
 </body>
 </html>
-
