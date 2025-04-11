@@ -8,18 +8,16 @@
   <link rel="icon" href="favicon.ico" type="image/x-icon">
 
   <style>
-    /* Ensure the html and body take full height */
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
       width: 100%;
-      overflow: hidden; /* Prevent scrollbars */
+      overflow: hidden;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f4f4f4; /* Light background for the body */
+      background-color: #f4f4f4;
     }
 
-    /* Loading screen style */
     #loadingScreen {
       position: fixed;
       top: 0;
@@ -41,13 +39,11 @@
       animation: fadeIn 0.5s ease-out;
     }
 
-    /* Fade-in animation for the loading screen */
     @keyframes fadeIn {
       0% { opacity: 0; }
       100% { opacity: 1; }
     }
 
-    /* Spinner styles */
     .spinner {
       border: 4px solid rgba(255, 255, 255, 0.3);
       border-top: 4px solid white;
@@ -58,21 +54,28 @@
       margin: 20px 0;
     }
 
-    /* Animation for spinner */
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
 
-    /* Iframe styles */
     iframe {
       width: 100%;
-      height: 100vh; /* Full height of the viewport */
+      height: 100vh;
       border: none;
-      display: none; /* Hide initially */
+      display: none;
     }
 
-    /* Text styling for the loading messages */
+    /* Handle fullscreen styles */
+    iframe:fullscreen,
+    iframe:-webkit-full-screen,
+    iframe:-moz-full-screen {
+      width: 100vw;
+      height: 100vh;
+      border: none;
+      display: block;
+    }
+
     #loadingScreen p {
       margin: 0;
       padding: 5px;
@@ -82,7 +85,22 @@
 
     #loadingScreen p:last-child {
       font-size: 16px;
-      color: #dcdcdc; /* Lighter color for the second message */
+      color: #dcdcdc;
+    }
+
+    #retryButton {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #retryButton:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
@@ -91,36 +109,80 @@
   <!-- Loading screen -->
   <div id="loadingScreen">
     <p>Connecting to the server...</p>
-    <!-- Spinner -->
     <div class="spinner"></div>
     <p>Please wait while the content loads.</p>
   </div>
 
-  <!-- Sandbox blocks popups by default -->
+  <!-- Sandbox to prevent popups -->
   <iframe id="myIframe" src="https://345movie.net" sandbox="allow-same-origin allow-scripts" allowfullscreen></iframe>
 
   <script>
-    // Track focus loss as an indicator
-    let lastFocused = document.hasFocus();
+    const loadingScreen = document.getElementById('loadingScreen');
+    const iframe = document.getElementById('myIframe');
 
+    function showError(message) {
+      loadingScreen.innerHTML = `
+        <p>Connection Error</p>
+        <div class="spinner" style="display:none;"></div>
+        <p style="color: #ffcccc;">${message}</p>
+        <button id="retryButton">Retry</button>
+      `;
+
+      document.getElementById('retryButton').addEventListener('click', () => {
+        loadingScreen.innerHTML = `
+          <p>Reconnecting to the server...</p>
+          <div class="spinner"></div>
+          <p>Please wait while the content reloads.</p>
+        `;
+        setTimeout(() => {
+          checkConnectionSpeed();
+        }, 500);
+      });
+    }
+
+    function showIframe() {
+      loadingScreen.style.display = 'none';
+      iframe.style.display = 'block';
+    }
+
+    function checkConnectionSpeed(thresholdMs = 1500) {
+      const startTime = Date.now();
+      const testImage = new Image();
+
+      testImage.onload = () => {
+        const duration = Date.now() - startTime;
+        if (duration > thresholdMs) {
+          showError("The server was unreachable due to an unstable internet connection (Response time: " + duration + " ms).");
+        } else {
+          showIframe();
+        }
+      };
+
+      testImage.onerror = () => {
+        showError("Failed to connect. Please check your internet connection.");
+      };
+
+      testImage.src = "https://www.google.com/images/phd/px.gif?cacheBust=" + Math.random();
+    }
+
+    // Detect fullscreen change and ensure iframe styling is correct
+    document.addEventListener("fullscreenchange", () => {
+      console.log("Fullscreen mode toggled");
+    });
+
+    // Optional: Watch for focus loss (possible popup or focus shift)
+    let lastFocused = document.hasFocus();
     setInterval(() => {
-      // If focus was lost and iframe is visible, assume a popup tried to open
       if (!document.hasFocus() && lastFocused) {
         console.warn("Popup detected or focus lost");
       }
       lastFocused = document.hasFocus();
     }, 500);
 
-    // Function to show the iframe after loading screen
-    function showIframe() {
-      document.getElementById('loadingScreen').style.display = 'none'; // Hide loading screen
-      document.getElementById('myIframe').style.display = 'block'; // Show iframe
-    }
-
-    // Simulate connecting delay, then show the iframe
+    // Start the initial check
     setTimeout(() => {
-      showIframe();
-    }, 3000); // Adjust the time (3 seconds) as needed
+      checkConnectionSpeed();
+    }, 1000);
   </script>
 </body>
 </html>
