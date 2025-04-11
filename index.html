@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Iframe Popup and Domain Blocker</title>
+  <title>345movie.net without adverts</title>
   <style>
     /* Ensure the html and body take full height */
     html, body {
@@ -11,71 +11,112 @@
       height: 100%;
       width: 100%;
       overflow: hidden; /* Prevent scrollbars */
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f4f4; /* Light background for the body */
     }
 
-    /* Ensure iframe takes the full height */
+    /* Loading screen style */
+    #loadingScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      font-weight: 500;
+      z-index: 9999;
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+      animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Fade-in animation for the loading screen */
+    @keyframes fadeIn {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+
+    /* Spinner styles */
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px 0;
+    }
+
+    /* Animation for spinner */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Iframe styles */
     iframe {
       width: 100%;
-      height: 100%; /* Full height of the body */
+      height: 100%;
       border: none;
-      display: block;
+      display: none; /* Hide initially */
+    }
+
+    /* Text styling for the loading messages */
+    #loadingScreen p {
+      margin: 0;
+      padding: 5px;
+      line-height: 1.4;
+      font-size: 20px;
+    }
+
+    #loadingScreen p:last-child {
+      font-size: 16px;
+      color: #dcdcdc; /* Lighter color for the second message */
     }
   </style>
 </head>
 <body>
 
+  <!-- Loading screen -->
+  <div id="loadingScreen">
+    <p>Connecting to the server...</p>
+    <!-- Spinner -->
+    <div class="spinner"></div>
+    <p>Please wait while the content loads.</p>
+  </div>
+
   <!-- Sandbox blocks popups by default -->
-  <iframe id="myIframe" src="https://345movie.net" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+  <iframe id="myIframe" src="https://345movie.net" sandbox="allow-same-origin allow-scripts"></iframe>
 
   <script>
-    // Check for iframe content window and block requests from a specific domain
-    const iframe = document.getElementById("myIframe");
+    // Track focus loss as an indicator
+    let lastFocused = document.hasFocus();
 
-    // Monitor the iframe's content window for potential issues
-    iframe.onload = function () {
-      try {
-        const iframeWindow = iframe.contentWindow;
-
-        // Block specific domains inside the iframe
-        const originalOpen = iframeWindow.open;
-        iframeWindow.open = function(url) {
-          if (url.includes("tracking.eu.flamtyr.com")) {
-            console.log("Blocked attempt to load content from tracking.eu.flamtyr.com");
-            return null;  // Block the popup or navigation
-          }
-          return originalOpen.apply(this, arguments);
-        };
-
-        // Monitor fetch requests and block those from the specific domain
-        const originalFetch = iframeWindow.fetch;
-        iframeWindow.fetch = function(input, init) {
-          const url = typeof input === 'string' ? input : input.url;
-          if (url.includes("tracking.eu.flamtyr.com")) {
-            console.log("Blocked network request to: " + url);
-            return Promise.reject("Blocked request to restricted domain");
-          }
-          return originalFetch.apply(this, arguments);
-        };
-
-        // Monitor XMLHttpRequest requests and block those from the specific domain
-        const originalXHR = iframeWindow.XMLHttpRequest;
-        iframeWindow.XMLHttpRequest = function() {
-          const xhr = new originalXHR();
-          const originalOpen = xhr.open;
-          xhr.open = function(method, url) {
-            if (url.includes("tracking.eu.flamtyr.com")) {
-              console.log("Blocked XMLHttpRequest to: " + url);
-              return; // Block the request
-            }
-            return originalOpen.apply(this, arguments);
-          };
-          return xhr;
-        };
-
-      } catch (e) {
-        console.error("Could not access iframe content due to cross-origin restrictions", e);
+    setInterval(() => {
+      // If focus was lost and iframe is visible, assume a popup tried to open
+      if (!document.hasFocus() && lastFocused) {
+        console.warn("Popup detected or focus lost");
       }
-    };
+      lastFocused = document.hasFocus();
+    }, 500);
+
+    // Function to show the iframe after loading screen
+    function showIframe() {
+      document.getElementById('loadingScreen').style.display = 'none'; // Hide loading screen
+      document.getElementById('myIframe').style.display = 'block'; // Show iframe
+    }
+
+    // Simulate connecting delay, then show the iframe
+    setTimeout(() => {
+      showIframe();
+    }, 3000); // Adjust the time (3 seconds) as needed
   </script>
 </body>
 </html>
