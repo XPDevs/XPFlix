@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>345movie.net without adverts</title>
-
-  <!-- Favicon -->
   <link rel="icon" href="favicon.ico" type="image/x-icon">
 
+  <!-- Bootstrap for modals (include from CDN) -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
     html, body {
       margin: 0;
@@ -26,7 +26,7 @@
       height: 100%;
       background-color: rgba(0, 0, 0, 0.7);
       color: white;
-      display: flex;
+      display: none;
       justify-content: center;
       align-items: center;
       font-size: 18px;
@@ -66,7 +66,6 @@
       display: none;
     }
 
-    /* Handle fullscreen styles */
     iframe:fullscreen,
     iframe:-webkit-full-screen,
     iframe:-moz-full-screen {
@@ -103,56 +102,55 @@
       background-color: #0056b3;
     }
 
-    /* Ensure all modals are centred and styled clearly */
-.modal-content {
-    text-align: center;
-    background-color: #fff;
-    border-radius: 6px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    padding: 20px;
-}
-
-.modal-header h4 {
-    font-size: 24px;
-    font-weight: bold;
-    color: #333;
-}
-
-.modal-body p {
-    margin-bottom: 15px;
-    font-size: 14px;
-    color: #444;
-}
-
-.modal-footer {
-    text-align: center;
-    padding-top: 10px;
-}
-
-.modal-footer .btn {
-    margin: 5px;
-}
-
-.modal .copyright {
-    font-size: 12px;
-    color: #777;
-    margin-top: 10px;
-}
-
-/* Responsive tweaks */
-@media screen and (max-width: 768px) {
     .modal-content {
-        padding: 15px;
+      text-align: center;
+      background-color: #fff;
+      border-radius: 6px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      padding: 20px;
     }
 
     .modal-header h4 {
-        font-size: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
     }
 
     .modal-body p {
-        font-size: 13px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #444;
     }
-}  </style>
+
+    .modal-footer {
+      text-align: center;
+      padding-top: 10px;
+    }
+
+    .modal-footer .btn {
+      margin: 5px;
+    }
+
+    .modal .copyright {
+      font-size: 12px;
+      color: #777;
+      margin-top: 10px;
+    }
+
+    @media screen and (max-width: 768px) {
+      .modal-content {
+        padding: 15px;
+      }
+
+      .modal-header h4 {
+        font-size: 20px;
+      }
+
+      .modal-body p {
+        font-size: 13px;
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -165,8 +163,8 @@
       </div>
       <div class="modal-body">
         <p>XPFlix is a custom wrapper around <a href="https://345movies.net" target="_blank">345movies.net</a>.</p>
-        <p><strong>XPDevs does not own or host any of the media or content displayed.</strong> All material originates from 345movies.net and is displayed using an iframe.</p>
-        <p>To protect users, XPFlix includes custom code that blocks all attempts to open external tabs, ads, or popups triggered by clicking inside the iframe.</p>
+        <p><strong>XPDevs does not own or host any of the media or content displayed.</strong></p>
+        <p>To protect users, XPFlix includes custom code that blocks popups and ads triggered from inside the iframe.</p>
         <p>For more information, click the button below.</p>
         <div class="copyright">
           <p>&copy; 2025 XPDevs. All rights reserved.</p>
@@ -188,10 +186,9 @@
         <h4 class="modal-title">XPFlix Legal Notice</h4>
       </div>
       <div class="modal-body">
-        <p><strong>XPDevs is not affiliated with 345movies.net</strong> and does not claim ownership over any videos, shows, or media found on the site.</p>
-        <p>This project is for educational, testing, and demonstration purposes only. It is essentially a browser shell that wraps a public site using an iframe.</p>
-        <p>The only original work done by XPDevs is the implementation of code that disables external redirects and new tab openings — a security measure designed to protect users from malicious popups and shady ads.</p>
-        <p>All copyrights and trademarks remain the property of their respective owners.</p>
+        <p><strong>XPDevs is not affiliated with 345movies.net</strong> and does not claim ownership of its content.</p>
+        <p>This is a browser shell demo that wraps a public site in an iframe.</p>
+        <p>XPDevs only implemented code to block external redirects and ads.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Back</button>
@@ -200,8 +197,6 @@
   </div>
 </div>
 
-
-  
 <!-- Loading screen -->
 <div id="loadingScreen">
   <p>Connecting to the server...</p>
@@ -210,12 +205,38 @@
   <p style="font-size: 14px; color: #aaaaaa; margin-top: 10px;">Version 2.7.0</p>
 </div>
 
-  <!-- Sandbox to prevent popups -->
-  <iframe id="myIframe" src="https://345movie.net" sandbox="allow-same-origin allow-scripts" allowfullscreen></iframe>
+<!-- Iframe -->
+<iframe id="myIframe" src="https://345movie.net" sandbox="allow-same-origin allow-scripts" allowfullscreen></iframe>
 
-  <script>
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const xpflixContinue = document.getElementById('xpflixContinue');
+    const moreInfoBtn = document.getElementById('moreInfoBtn');
     const loadingScreen = document.getElementById('loadingScreen');
     const iframe = document.getElementById('myIframe');
+
+    loadingScreen.style.display = 'none';
+
+    $('#xpflixModal').modal('show');
+
+    xpflixContinue.addEventListener('click', function () {
+      $('#xpflixModal').modal('hide');
+      loadingScreen.style.display = 'flex';
+      setTimeout(() => {
+        checkConnectionSpeed();
+      }, 500);
+    });
+
+moreInfoBtn.addEventListener('click', function () {
+  $('#xpflixModal').modal('hide');
+  $('#xpflixInfoModal').modal('show').on('hidden.bs.modal', function () {
+    $('#xpflixModal').modal('show');
+  });
+});
+
 
     function showError(message) {
       loadingScreen.innerHTML = `
@@ -224,7 +245,6 @@
         <p style="color: #ffcccc;">${message}</p>
         <button id="retryButton">Retry</button>
       `;
-
       document.getElementById('retryButton').addEventListener('click', () => {
         loadingScreen.innerHTML = `
           <p>Reconnecting to the server...</p>
@@ -245,7 +265,6 @@
     function checkConnectionSpeed(thresholdMs = 1500) {
       const startTime = Date.now();
       const testImage = new Image();
-
       testImage.onload = () => {
         const duration = Date.now() - startTime;
         if (duration > thresholdMs) {
@@ -254,20 +273,12 @@
           showIframe();
         }
       };
-
       testImage.onerror = () => {
         showError("Failed to connect. Please check your internet connection.");
       };
-
       testImage.src = "https://www.google.com/images/phd/px.gif?cacheBust=" + Math.random();
     }
 
-    // Detect fullscreen change and ensure iframe styling is correct
-    document.addEventListener("fullscreenchange", () => {
-      console.log("Fullscreen mode toggled");
-    });
-
-    // Optional: Watch for focus loss (possible popup or focus shift)
     let lastFocused = document.hasFocus();
     setInterval(() => {
       if (!document.hasFocus() && lastFocused) {
@@ -275,33 +286,8 @@
       }
       lastFocused = document.hasFocus();
     }, 500);
-
-    // Start the initial check
-    setTimeout(() => {
-      checkConnectionSpeed();
-    }, 1000);
-
-    <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const xpflixContinue = document.getElementById('xpflixContinue');
-    const moreInfoBtn = document.getElementById('moreInfoBtn');
-
-    // Show main modal on load
-    $('#xpflixModal').modal('show');
-
-    // Continue button hides the main modal
-    xpflixContinue.addEventListener('click', function () {
-      $('#xpflixModal').modal('hide');
-    });
-
-    // More Info button shows the second modal
-    moreInfoBtn.addEventListener('click', function () {
-      $('#xpflixModal').modal('hide');
-      $('#xpflixInfoModal').modal('show');
-    });
   });
 </script>
 
-  </script>
 </body>
 </html>
