@@ -209,6 +209,25 @@
     </div>
   </div>
 
+<!-- Clear Local Storage Modal -->
+<div id="clearStorageModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Clear Local Storage</h4>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to clear all saved data?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="clearStorageBtn">Clear Data</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  
   <!-- Loading screen -->
   <div id="loadingScreen">
     <p>Connecting to the server...</p>
@@ -234,7 +253,68 @@
       const moreInfoBtn = document.getElementById("moreInfoBtn");
       const loadingScreen = document.getElementById("loadingScreen");
       const iframe = document.getElementById("myIframe");
+  const clearStorageModal = $("#clearStorageModal");
 
+  loadingScreen.style.display = "none";
+
+  // Show modal only if not accepted before
+  if (!localStorage.getItem("xpflixAccepted")) {
+    $("#xpflixModal").modal("show");
+  } else {
+    loadingScreen.style.display = "flex";
+    setTimeout(() => {
+      checkConnectionSpeed();
+    }, 500);
+  }
+
+  // Detect Shift key hold during the first 2 seconds
+  let shiftHeld = false;
+  const shiftTimeout = setTimeout(() => {
+    if (shiftHeld) {
+      clearStorageModal.modal("show");
+    }
+  }, 2000);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Shift") {
+      shiftHeld = true;
+    }
+  });
+
+  document.addEventListener("keyup", (event) => {
+    if (event.key === "Shift") {
+      shiftHeld = false;
+    }
+  });
+
+  clearStorageModal.on("hidden.bs.modal", function () {
+    clearTimeout(shiftTimeout);
+  });
+
+  document.getElementById("clearStorageBtn").addEventListener("click", function () {
+    localStorage.clear();
+    alert("Local storage cleared!");
+    clearStorageModal.modal("hide");
+  });
+
+  xpflixContinue.addEventListener("click", function () {
+    // Save acceptance to localStorage
+    localStorage.setItem("xpflixAccepted", "true");
+    $("#xpflixModal").modal("hide");
+    loadingScreen.style.display = "flex";
+    setTimeout(() => {
+      checkConnectionSpeed();
+    }, 500);
+  });
+
+  moreInfoBtn.addEventListener("click", function () {
+    $("#xpflixModal").modal("hide");
+    $("#xpflixInfoModal")
+      .modal("show")
+      .on("hidden.bs.modal", function () {
+        $("#xpflixModal").modal("show");
+      });
+  });
       loadingScreen.style.display = "none";
 
       // Show modal only if not accepted before
