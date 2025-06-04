@@ -399,6 +399,45 @@
         lastFocused = document.hasFocus();
       }, 500);
     });
+
+    let gamepadConnected = false;
+
+window.addEventListener("gamepadconnected", function (e) {
+  gamepadConnected = true;
+  console.log("Gamepad connected:", e.gamepad);
+});
+
+window.addEventListener("gamepaddisconnected", function (e) {
+  gamepadConnected = false;
+  console.log("Gamepad disconnected:", e.gamepad);
+});
+
+function pollGamepad() {
+  if (!gamepadConnected) return;
+
+  const gamepads = navigator.getGamepads();
+  const gp = gamepads[0];
+  if (!gp) return;
+
+  // Button mapping may vary by controller:
+  const A = gp.buttons[0].pressed; // A / Cross
+  const B = gp.buttons[1].pressed; // B / Circle
+
+  // Only execute on button *press*, not hold
+  if (A && !pollGamepad.lastA) {
+    document.getElementById("xpflixContinue").click();
+  }
+  if (B && !pollGamepad.lastB) {
+    // Close modals if any are open
+    $(".modal").modal("hide");
+  }
+
+  pollGamepad.lastA = A;
+  pollGamepad.lastB = B;
+}
+
+setInterval(pollGamepad, 100); // Poll every 100ms
+
   </script>
 </body>
 </html>
